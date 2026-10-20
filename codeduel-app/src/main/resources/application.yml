@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: codeduel-app
+
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+    listener:
+      simple:
+        prefetch: 1
+        acknowledge-mode: auto
