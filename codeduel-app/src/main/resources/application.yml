@@ -2,6 +2,20 @@ spring:
   application:
     name: codeduel-app
 
+  datasource:
+    url: jdbc:postgresql://localhost:5433/codeduel
+    username: codeduel
+    password: codeduel
+
+  flyway:
+    enabled: true
+    locations:
+      - classpath:db/migration
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
   rabbitmq:
     host: localhost
     port: 5672
