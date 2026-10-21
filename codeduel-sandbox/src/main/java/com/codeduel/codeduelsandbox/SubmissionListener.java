@@ -39,7 +39,7 @@ public class SubmissionListener {
                 task.matchId(),
                 task.userId(),
                 Verdict.ACCEPTED,
-                1, 1, null, 42L, null,
+                null, null,
                 Instant.now().toString()
         );
 
