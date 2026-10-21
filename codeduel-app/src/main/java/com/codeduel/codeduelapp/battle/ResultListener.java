@@ -17,9 +17,8 @@ public class ResultListener {
 
     @RabbitListener(queues = QueueNames.RESULTS_QUEUE)
     public void handle(SubmissionResultMessage result) {
-        log.info("Received result: submissionId={}, matchId={}, verdict={}, passed={}/{}",
-                result.submissionId(), result.matchId(), result.verdict(),
-                result.passed(), result.total());
+        log.info("Received result: submissionId={}, matchId={}, verdict={}",
+                result.submissionId(), result.matchId(), result.verdict());
         // TODO - далее логика battle
     }
 }
