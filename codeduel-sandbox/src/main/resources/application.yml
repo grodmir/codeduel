@@ -12,3 +12,11 @@ spring:
         acknowledge-mode: manual
         prefetch: 1
         missing-queues-fatal: false
+
+sandbox:
+  docker:
+    host: ${DOCKER_HOST:npipe:////./pipe/docker_engine}
+    tls-verify: ${DOCKER_TLS_VERIFY:false}
+    connect-timeout: 30000
+    response-timeout: 60000
+    max-connections: 100
