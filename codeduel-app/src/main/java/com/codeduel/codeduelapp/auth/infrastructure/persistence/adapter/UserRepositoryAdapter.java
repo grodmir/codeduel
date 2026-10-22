@@ -1,15 +1,16 @@
 package com.codeduel.codeduelapp.auth.infrastructure.persistence.adapter;
 
-import com.codeduel.codeduelapp.auth.domain.UserRepository;
+import com.codeduel.codeduelapp.auth.domain.exception.UserNotFoundById;
 import com.codeduel.codeduelapp.auth.domain.model.User;
+import com.codeduel.codeduelapp.auth.domain.repository.UserRepository;
 import com.codeduel.codeduelapp.auth.infrastructure.persistence.entity.UserJpaEntity;
-import com.codeduel.codeduelapp.auth.infrastructure.persistence.exception.UserNotFoundException;
 import com.codeduel.codeduelapp.auth.infrastructure.persistence.mapper.UserMapper;
 import com.codeduel.codeduelapp.auth.infrastructure.persistence.repository.UserJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.OffsetDateTime;
 import java.util.Optional;
 
 @Component
@@ -27,7 +28,7 @@ public class UserRepositoryAdapter implements UserRepository {
             entity = userMapper.toNewEntity(user);
         } else {
             entity = userJpaRepository.findById(user.getId()).orElseThrow(
-                    () -> new UserNotFoundException(user.getId())
+                    () -> new UserNotFoundById(user.getId())
             );
             userMapper.updateEntity(entity, user);
         }
@@ -43,5 +44,29 @@ public class UserRepositoryAdapter implements UserRepository {
     @Override
     public Optional<User> findByEmail(String email) {
         return userJpaRepository.findByEmail(email).map(userMapper::toModel);
+    }
+
+    @Override
+    public Optional<User> findByUsername(String username) {
+        return userJpaRepository.findByUsername(username).map(userMapper::toModel);
+    }
+
+    @Override
+    public boolean existsByEmail(String email) {
+        return userJpaRepository.existsByEmail(email);
+    }
+
+    @Override
+    public boolean existsByUsername(String username) {
+        return userJpaRepository.existsByUsername(username);
+    }
+
+    @Override
+    @Transactional
+    public void deleteById(Integer id) {
+        UserJpaEntity entity = userJpaRepository.findById(id).orElseThrow(
+                () -> new UserNotFoundById(id)
+        );
+        entity.setDeletedAt(OffsetDateTime.now());
     }
 }
