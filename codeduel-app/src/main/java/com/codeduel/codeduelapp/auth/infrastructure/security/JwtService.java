@@ -20,7 +20,7 @@ public class JwtService {
     private final JwtEncoder encoder;
     private final Duration ttl;
 
-    public JwtService(JwtEncoder encoder, @Value("${token.signing.ttl}") Duration ttl) {
+    public JwtService(JwtEncoder encoder, @Value("${app.jwt.ttl}") Duration ttl) {
         this.encoder = encoder;
         this.ttl = ttl;
     }

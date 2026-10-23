@@ -43,7 +43,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    SecretKey jwtSecretKey(@Value("${token.signing.key}") String secret) {
+    SecretKey jwtSecretKey(@Value("${app.jwt.secret}") String secret) {
         return new SecretKeySpec(Base64.getDecoder().decode(secret), "HmacSHA256");
     }
 
