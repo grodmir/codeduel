@@ -1,10 +1,9 @@
 package com.codeduel.codeduelapp.debug;
 
 import com.codeduel.SubmissionTaskMessage;
-import com.codeduel.codeduelapp.battle.SubmissionProducer;
+import com.codeduel.codeduelapp.battle.messaging.SubmissionProducer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;

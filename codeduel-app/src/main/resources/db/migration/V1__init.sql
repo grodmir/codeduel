@@ -9,11 +9,12 @@ DROP TABLE IF EXISTS users CASCADE;
 
 CREATE TABLE users (
         id serial PRIMARY KEY,
-        username varchar(255) NOT NULL UNIQUE,
-        email varchar(255) NOT NULL UNIQUE,
+        username varchar(255) NOT NULL,
+        email varchar(255) NOT NULL,
         role varchar(32) NOT NULL DEFAULT 'USER',
         password_hash varchar(255) NOT NULL,
         created_at timestamp with time zone NOT NULL DEFAULT now(),
+        deleted_at timestamp with time zone,
 
         CONSTRAINT user_role_valid
             CHECK ( role IN ('USER', 'ADMIN') ),
@@ -24,7 +25,7 @@ CREATE TABLE users (
 );
 
 CREATE TABLE profiles (
-        user_id integer PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+        user_id integer PRIMARY KEY REFERENCES users(id),
         rating integer NOT NULL DEFAULT 1000,
         wins integer NOT NULL DEFAULT 0,
         losses integer NOT NULL DEFAULT 0,
@@ -79,7 +80,7 @@ CREATE TABLE matches (
         task_id     integer NOT NULL REFERENCES tasks(id) ON DELETE RESTRICT,
         status      varchar(255) NOT NULL,
         outcome     varchar(255),
-        winner_id   integer REFERENCES users(id) ON DELETE SET NULL,
+        winner_id   integer REFERENCES users(id),
         created_at  timestamp with time zone NOT NULL DEFAULT now(),
         started_at  timestamp with time zone,
         finished_at timestamp with time zone,
@@ -206,3 +207,5 @@ CREATE INDEX idx_submissions_verdict        ON submissions(verdict);
 CREATE INDEX idx_test_cases_task_id         ON test_cases(task_id);
 CREATE INDEX idx_expected_outputs_test_case ON expected_outputs(test_case_id);
 CREATE INDEX idx_tasks_active               ON tasks(active) WHERE active = true;
+CREATE UNIQUE INDEX users_username_unique_live ON users(username) WHERE deleted_at IS NULL;
+CREATE UNIQUE INDEX users_email_unique_live ON users(email) WHERE deleted_at IS NULL;

@@ -21,13 +21,10 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <spring-boot.version>4.1.0</spring-boot.version>
-        <spring-boot-jpa.version>4.1.1</spring-boot-jpa.version>
 
-        <jjwt.version>0.13.0</jjwt.version>
         <docker-java.version>3.7.1</docker-java.version>
 
         <lombok.version>1.18.46</lombok.version>
-        <flyway.version>4.2.0-M2</flyway.version>
         <flyway-postgresql.version>13.10.3</flyway-postgresql.version>
         <postgresql-driver.version>42.7.13</postgresql-driver.version>
 
@@ -43,12 +40,6 @@
                 <version>${spring-boot.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-starter-data-jpa</artifactId>
-                <version>${spring-boot-jpa.version}</version>
-                <scope>compile</scope>
             </dependency>
             <dependency>
                 <groupId>org.postgresql</groupId>
@@ -70,32 +61,10 @@
                 <scope>compile</scope>
             </dependency>
             <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-starter-flyway</artifactId>
-                <version>${flyway.version}</version>
-                <scope>compile</scope>
-            </dependency>
-            <dependency>
                 <groupId>org.flywaydb</groupId>
                 <artifactId>flyway-database-postgresql</artifactId>
                 <version>${flyway-postgresql.version}</version>
                 <scope>compile</scope>
-            </dependency>
-
-            <dependency>
-                <groupId>io.jsonwebtoken</groupId>
-                <artifactId>jjwt-api</artifactId>
-                <version>${jjwt.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.jsonwebtoken</groupId>
-                <artifactId>jjwt-impl</artifactId>
-                <version>${jjwt.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.jsonwebtoken</groupId>
-                <artifactId>jjwt-jackson</artifactId>
-                <version>${jjwt.version}</version>
             </dependency>
 
             <dependency>

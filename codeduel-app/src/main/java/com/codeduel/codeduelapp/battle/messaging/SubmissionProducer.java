@@ -1,4 +1,4 @@
-package com.codeduel.codeduelapp.battle;
+package com.codeduel.codeduelapp.battle.messaging;
 
 import com.codeduel.QueueNames;
 import com.codeduel.SubmissionTaskMessage;

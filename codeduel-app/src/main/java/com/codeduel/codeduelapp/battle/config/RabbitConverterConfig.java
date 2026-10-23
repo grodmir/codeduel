@@ -1,4 +1,4 @@
-package com.codeduel.codeduelapp.config;
+package com.codeduel.codeduelapp.battle.config;
 
 import org.springframework.amqp.support.converter.JacksonJsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;

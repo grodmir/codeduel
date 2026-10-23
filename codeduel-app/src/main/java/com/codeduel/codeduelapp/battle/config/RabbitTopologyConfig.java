@@ -1,4 +1,4 @@
-package com.codeduel.codeduelapp.config;
+package com.codeduel.codeduelapp.battle.config;
 
 import com.codeduel.QueueNames;
 import org.springframework.amqp.core.Queue;
