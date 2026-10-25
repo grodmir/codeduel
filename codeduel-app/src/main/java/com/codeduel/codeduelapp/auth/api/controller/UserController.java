@@ -11,6 +11,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Objects;
+
 @RestController
 @RequestMapping("/users/me")
 @RequiredArgsConstructor
@@ -22,7 +24,7 @@ public class UserController {
     public UserResponse getCurrentUser(
             @AuthenticationPrincipal Jwt jwt
     ) {
-        User user = userService.getByUsername(jwt.getSubject());
+        User user = userService.getById(Integer.valueOf(jwt.getSubject()));
 
         return UserResponse.from(user);
     }
@@ -32,7 +34,7 @@ public class UserController {
             @AuthenticationPrincipal Jwt jwt,
             @Valid @RequestBody UpdateUserRequest request
     ) {
-        User user = userService.getByUsername(jwt.getSubject());
+        User user = userService.getById(Integer.valueOf(jwt.getSubject()));
 
         User updatedUser = userService.update(
                 user.getId(),
@@ -48,8 +50,6 @@ public class UserController {
     public void deleteCurrentUser(
             @AuthenticationPrincipal Jwt jwt
     ) {
-        User user = userService.getByUsername(jwt.getSubject());
-
-        userService.deleteById(user.getId());
+        userService.deleteById(Integer.valueOf(jwt.getSubject()));
     }
 }

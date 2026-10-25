@@ -19,6 +19,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final TokenRevoker tokenRevoker;
 
     @Value("${elo.initial}")
     private int initialRating;
@@ -75,6 +76,7 @@ public class UserService {
                 throw new InvalidCurrentPasswordException();
             }
             builder.passwordHash(passwordEncoder.encode(newPassword));
+            tokenRevoker.revokeAllForUser(user.getId());
         }
 
         return userRepository.save(builder.build());
@@ -83,5 +85,6 @@ public class UserService {
     @Transactional
     public void deleteById(Integer id) {
         userRepository.deleteById(id);
+        tokenRevoker.revokeAllForUser(id);
     }
 }
