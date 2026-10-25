@@ -7,6 +7,14 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
 
+/**
+ * Репозиторий пользователей.
+ *
+ * <p>Методы, возвращающие {@link UserJpaEntity}, используют
+ * {@code @EntityGraph} для загрузки профиля — без этого обращение
+ * к {@code getProfile()} вне транзакции приведёт к
+ * {@code LazyInitializationException} (см. {@code UserMapper}).
+ * */
 public interface UserJpaRepository extends JpaRepository<UserJpaEntity, Integer> {
 
     @EntityGraph(attributePaths = "profile")

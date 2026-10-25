@@ -13,6 +13,13 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.OffsetDateTime;
 import java.util.Optional;
 
+/**
+ * JPA-реализация {@link UserRepository}.
+ *
+ * <p>Чтения полагаются на {@code @EntityGraph} в {@link UserJpaRepository}:
+ * профиль загружается eager'ом, иначе {@link UserMapper} упадёт на
+ * {@code getProfile()} вне транзакции.
+ */
 @Component
 @RequiredArgsConstructor
 public class UserRepositoryAdapter implements UserRepository {

@@ -11,6 +11,11 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.Instant;
 
+/**
+ * Глобальный обработчик ошибок.
+ * Переводит доменные и валидационные исключения в HTTP-ответы
+ * формата {@link ApiError}.
+ */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 

@@ -1,5 +1,7 @@
-package com.codeduel.codeduelapp.auth.infrastructure.security;
+package com.codeduel.codeduelapp.auth.infrastructure.security.service;
 
+import com.codeduel.codeduelapp.auth.infrastructure.security.model.AppUserDetails;
+import com.codeduel.codeduelapp.auth.infrastructure.security.dto.IssuedToken;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
@@ -13,6 +15,14 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
 
+/**
+ * Выпускает HS256-JWT для аутентифицированного пользователя.
+ *
+ * <p>В токен кладутся: {@code sub = id}, {@code username}, {@code roles}
+ * (с префиксом {@code ROLE_}), {@code jti} (UUID) и стандартные
+ * {@code iss}/{@code iat}/{@code exp}. {@code jti} используется
+ * для точечного отзыва.
+ */
 @Service
 public class JwtService {
 

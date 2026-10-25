@@ -1,4 +1,4 @@
-package com.codeduel.codeduelapp.auth.infrastructure.security;
+package com.codeduel.codeduelapp.auth.infrastructure.security.model;
 
 import com.codeduel.codeduelapp.auth.domain.model.Role;
 import com.codeduel.codeduelapp.auth.infrastructure.persistence.entity.UserJpaEntity;
@@ -10,6 +10,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 import java.util.List;
 
+/**
+ * Адаптер {@link UserJpaEntity} под {@link UserDetails} для {@code DaoAuthenticationProvider}.
+ * Используется только на этапе логина; в Resource Server principal — это {@link org.springframework.security.oauth2.jwt.Jwt}.
+ */
 @Getter
 public class AppUserDetails implements UserDetails {
 

@@ -1,4 +1,4 @@
-package com.codeduel.codeduelapp.auth.infrastructure.security;
+package com.codeduel.codeduelapp.auth.infrastructure.security.dto;
 
 import java.time.Instant;
 

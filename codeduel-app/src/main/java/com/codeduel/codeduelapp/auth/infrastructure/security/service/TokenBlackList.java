@@ -1,4 +1,4 @@
-package com.codeduel.codeduelapp.auth.infrastructure.security;
+package com.codeduel.codeduelapp.auth.infrastructure.security.service;
 
 import com.codeduel.codeduelapp.auth.domain.service.TokenRevoker;
 import org.springframework.beans.factory.annotation.Value;
@@ -8,6 +8,14 @@ import org.springframework.stereotype.Component;
 import java.time.Duration;
 import java.time.Instant;
 
+/**
+ * Реализация {@link TokenRevoker} на Redis.
+ *
+ * <p>Используются два ключа: {@code jwt:revoked:<jti>} для точечного отзыва
+ * и {@code jwt:user-revoked-before:<id>} для отзыва всех токенов пользователя.
+ * TTL записей — время жизни токена + {@link #LEEWAY} (компенсация рассинхрона
+ * часов и секундной точности {@code exp}).
+ */
 @Component
 public class TokenBlackList implements TokenRevoker {
 
@@ -24,10 +32,6 @@ public class TokenBlackList implements TokenRevoker {
         this.tokenTtl = tokenTtl;
     }
 
-    /**
-     * Считать конкретный токен {@code jti} недействительным с текущего момента.
-     * Хранить запись остаток времени жизни токена + 60 секунд разбежки.
-     * */
     @Override
     public void revoke(String jti, Instant tokenExpiresAt) {
         Duration ttl = Duration.between(Instant.now(), tokenExpiresAt).plus(LEEWAY);
@@ -37,31 +41,22 @@ public class TokenBlackList implements TokenRevoker {
         }
     }
 
-    /**
-     * Считать все токены выданные с текущего момента для пользователя {@code userId} недействительными.
-     * Хранить запись максимальное время жизни токена,
-     * т.к. нет возможности проверить даты их создания + 60 секунд разбежки
-     * Возможно, что запись будет храниться дольше, чем живёт последний устаревший токен.
-     * */
     @Override
     public void revokeAllForUser(Integer userId) {
+        // Время хранения записи с запасом, поэтому умножаем на 2
         redis.opsForValue().set(
                 USER_KEY_PREFIX + userId,
                 String.valueOf(Instant.now().getEpochSecond()),
-                tokenTtl.plus(LEEWAY)
+                tokenTtl.multipliedBy(2).plus(LEEWAY)
         );
     }
 
-    /**
-     * Проверка на то, был ли токен {@code jti} отозван через /logout
-     * */
+    @Override
     public boolean isRevoked(String jti) {
         return jti != null && Boolean.TRUE.equals(redis.hasKey(JTI_KEY_PREFIX + jti));
     }
 
-    /**
-     * Проверка, выдан ли этот токен ({@code issuedAt}) раньше, чем сбросили все токены пользователя ({@code userId})
-     * */
+    @Override
     public boolean isIssuedBeforeRevocation(String userId, Instant issuedAt) {
         String value = redis.opsForValue().get(USER_KEY_PREFIX + userId);
         return value != null

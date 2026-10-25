@@ -10,6 +10,10 @@ import org.hibernate.annotations.SQLRestriction;
 
 import java.time.OffsetDateTime;
 
+
+/**
+ * Класс сущность, соответствующая таблице {@code users} в базе данных.
+ * */
 @Entity
 @Getter
 @Setter

@@ -17,7 +17,7 @@ public class RegisterController {
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
     public void register(@Valid @RequestBody RegisterRequest req) {
-        userService.register(
+        userService.create(
                 req.username(),
                 req.email(),
                 req.password()

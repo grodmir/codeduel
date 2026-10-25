@@ -13,6 +13,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Создание и управление пользователями.
+ * */
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -24,8 +27,21 @@ public class UserService {
     @Value("${elo.initial}")
     private int initialRating;
 
+    /**
+     * Создание нового пользователя.
+     *
+     * <p>{@code username} обрезается по краям, {@code email} - обрезается и приводится
+     * к нижнему регистру; уникальность проверяется по нормализованным значениям.
+     * Роль всегда {@code USER}, рейтинг - {@code elo.initial}.
+     *
+     * @param username псевдоним пользователя
+     * @param email почта пользователя
+     * @param password пароль пользователя. Передаётся в raw-формате, кодируется внутри метода.
+     *
+     * @throws UserArleadyExistsException если username или email уже заняты
+     * */
     @Transactional
-    public void register(String username, String email, String password) {
+    public void create(String username, String email, String password) {
         String normUsername = username.trim();
         String normEmail = email.trim().toLowerCase();
 
@@ -44,6 +60,9 @@ public class UserService {
         userRepository.save(user);
     }
 
+    /**
+     * @throws UserNotFoundById если пользователя с таким {@code id} нету
+     * */
     @Transactional(readOnly = true)
     public User getById(Integer id) {
         return userRepository.findById(id).orElseThrow(
@@ -51,6 +70,9 @@ public class UserService {
         );
     }
 
+    /**
+     * @throws UserNotFoundByUsername если пользователя с таким {@code username} не существует
+     * */
     @Transactional(readOnly = true)
     public User getByUsername(String username) {
         return userRepository.findByUsername(username).orElseThrow(
@@ -58,6 +80,18 @@ public class UserService {
         );
     }
 
+    /**
+     * Частичное обновление: @{code null}-поля не изменяются
+     *
+     * <p>Email нормализуется (trim + lowercase) и проверяется на уникальность, только если отличается
+     * от текущего. Смена пароля требует @{code currentPassword} и <b>отзывает
+     * все активные токены</b> пользователя.
+     *
+     * @throws UserArleadyExistsException если новый email уже занят
+     * @throws InvalidCurrentPasswordException если {@code newPassword} задан, а {@code currentPassword} не
+     *  передан или не совпадает.
+     * @throws UserNotFoundById если пользователя с {@code id} не существует.
+     * */
     @Transactional
     public User update(Integer id, String email, String newPassword, String currentPassword) {
         User user = getById(id);
@@ -82,6 +116,12 @@ public class UserService {
         return userRepository.save(builder.build());
     }
 
+    /**
+     * Помечает пользователя удалённым (soft delete) и
+     * <b>отзывает все активные токены</b>.
+     *
+     * @throws UserNotFoundById если пользователя нет
+     */
     @Transactional
     public void deleteById(Integer id) {
         userRepository.deleteById(id);

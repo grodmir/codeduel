@@ -1,5 +1,6 @@
-package com.codeduel.codeduelapp.auth.infrastructure.security;
+package com.codeduel.codeduelapp.auth.infrastructure.security.config;
 
+import com.codeduel.codeduelapp.auth.infrastructure.security.service.JwtService;
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -23,6 +24,11 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.util.Base64;
 
+/**
+ * Stateless-конфигурация Resource Server: HS256-подпись, симметричный ключ,
+ * отключённые CSRF и HTTP-сессии. Токены выпускает и проверяет
+ * этот же сервис (см. {@link JwtService}).
+ */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -64,6 +70,7 @@ public class SecurityConfig {
         return new NimbusJwtEncoder(new ImmutableSecret<>(key));
     }
 
+    // В токене роли уже с префиксом ROLE_, поэтому префикс конвертера пустой.
     private JwtAuthenticationConverter jwtAuthConverter() {
         var authorities = new JwtGrantedAuthoritiesConverter();
         authorities.setAuthoritiesClaimName("roles");
@@ -79,7 +86,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+    AuthenticationManager authenticationManager(AuthenticationConfiguration config) {
         return config.getAuthenticationManager();
     }
 }
