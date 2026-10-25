@@ -1,9 +1,17 @@
 package com.codeduel.codeduelapp.auth.api.controller;
 
+import com.codeduel.codeduelapp.auth.api.dto.ApiError;
 import com.codeduel.codeduelapp.auth.api.dto.UpdateUserRequest;
 import com.codeduel.codeduelapp.auth.api.dto.UserResponse;
 import com.codeduel.codeduelapp.auth.domain.model.User;
 import com.codeduel.codeduelapp.auth.domain.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -14,10 +22,18 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/users/me")
 @RequiredArgsConstructor
+@Tag(name = "User Profile", description = "Профиль текущего аутентифицированного пользователя")
+@SecurityRequirement(name = "bearerAuth")
 public class UserController {
 
     private final UserService userService;
 
+    @Operation(summary = "Получить текущего пользователя")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Профиль"),
+            @ApiResponse(responseCode = "401", description = "Токен отсутствует или невалиден",
+                    content = @Content(schema = @Schema(implementation = ApiError.class)))
+    })
     @GetMapping
     public UserResponse getCurrentUser(
             @AuthenticationPrincipal Jwt jwt
@@ -27,15 +43,24 @@ public class UserController {
         return UserResponse.from(user);
     }
 
+    @Operation(summary = "Обновить профиль",
+            description = "Частичное обновление: null-поля не меняются. Смена пароля требует currentPassword и отзывает все активные токены пользователя.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Обновлённый профиль"),
+            @ApiResponse(responseCode = "400", description = "Невалидное тело запроса или неверный currentPassword",
+                    content = @Content(schema = @Schema(implementation = ApiError.class))),
+            @ApiResponse(responseCode = "401", description = "Токен отсутствует или невалиден",
+                    content = @Content(schema = @Schema(implementation = ApiError.class))),
+            @ApiResponse(responseCode = "409", description = "Новый email уже занят",
+                    content = @Content(schema = @Schema(implementation = ApiError.class)))
+    })
     @PatchMapping
     public UserResponse updateCurrentUser(
             @AuthenticationPrincipal Jwt jwt,
             @Valid @RequestBody UpdateUserRequest request
     ) {
-        User user = userService.getById(Integer.valueOf(jwt.getSubject()));
-
         User updatedUser = userService.update(
-                user.getId(),
+                Integer.valueOf(jwt.getSubject()),
                 request.email(),
                 request.newPassword(),
                 request.currentPassword()
@@ -43,6 +68,13 @@ public class UserController {
         return UserResponse.from(updatedUser);
     }
 
+    @Operation(summary = "Удалить аккаунт",
+            description = "Soft delete: помечает пользователя удалённым и отзывает все активные токены.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Аккаунт помечен удалённым"),
+            @ApiResponse(responseCode = "401", description = "Токен отсутствует или невалиден",
+                    content = @Content(schema = @Schema(implementation = ApiError.class)))
+    })
     @DeleteMapping
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteCurrentUser(
