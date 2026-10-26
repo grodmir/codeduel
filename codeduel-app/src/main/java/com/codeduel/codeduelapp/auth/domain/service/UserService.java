@@ -7,7 +7,9 @@ import com.codeduel.codeduelapp.auth.domain.exception.UserNotFoundByUsername;
 import com.codeduel.codeduelapp.auth.domain.model.Role;
 import com.codeduel.codeduelapp.auth.domain.model.User;
 import com.codeduel.codeduelapp.auth.domain.repository.UserRepository;
+import com.codeduel.codeduelapp.auth.infrastructure.security.service.PasswordHasher;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -16,12 +18,13 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Создание и управление пользователями.
  * */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserService {
 
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
+    private final PasswordHasher passwordEncoder;
     private final TokenRevoker tokenRevoker;
 
     @Value("${elo.initial}")
@@ -51,13 +54,14 @@ public class UserService {
         User user = User.builder()
                 .username(normUsername)
                 .email(normEmail)
-                .passwordHash(passwordEncoder.encode(password))
+                .passwordHash(passwordEncoder.hash(password))
                 .role(Role.USER)
                 .rating(initialRating)
                 .wins(0)
                 .losses(0)
                 .build();
         userRepository.save(user);
+        log.info("User created: userId={}", user.getId());
     }
 
     /**
@@ -102,15 +106,18 @@ public class UserService {
             if (!normEmail.equals(user.getEmail())) {
                 if (userRepository.existsByEmail(normEmail)) throw new UserArleadyExistsException("EMAIL");
                 builder.email(normEmail);
+                log.info("User email changed: userId={}", id);
             }
         }
 
         if (newPassword != null) {
             if (currentPassword == null || !passwordEncoder.matches(currentPassword, user.getPasswordHash())) {
+                log.warn("Password change rejected: invalid current password, userId={}", id);
                 throw new InvalidCurrentPasswordException();
             }
-            builder.passwordHash(passwordEncoder.encode(newPassword));
+            builder.passwordHash(passwordEncoder.hash(newPassword));
             tokenRevoker.revokeAllForUser(user.getId());
+            log.info("User password changed, all tokens revoked: userId={}", id);
         }
 
         return userRepository.save(builder.build());
@@ -126,5 +133,6 @@ public class UserService {
     public void deleteById(Integer id) {
         userRepository.deleteById(id);
         tokenRevoker.revokeAllForUser(id);
+        log.info("User deleted (soft), all tokens revoked: userId={}", id);
     }
 }

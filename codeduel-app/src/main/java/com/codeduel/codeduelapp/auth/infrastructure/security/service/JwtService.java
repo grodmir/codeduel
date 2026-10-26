@@ -1,9 +1,10 @@
 package com.codeduel.codeduelapp.auth.infrastructure.security.service;
 
-import com.codeduel.codeduelapp.auth.infrastructure.security.model.AppUserDetails;
-import com.codeduel.codeduelapp.auth.infrastructure.security.dto.IssuedToken;
+import com.codeduel.codeduelapp.auth.domain.model.AuthenticatedUser;
+import com.codeduel.codeduelapp.auth.domain.model.IssuedToken;
+import com.codeduel.codeduelapp.auth.domain.service.TokenIssuer;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwsHeader;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -23,8 +25,9 @@ import java.util.UUID;
  * {@code iss}/{@code iat}/{@code exp}. {@code jti} используется
  * для точечного отзыва.
  */
+@Slf4j
 @Service
-public class JwtService {
+public class JwtService implements TokenIssuer {
 
     private final JwtEncoder encoder;
     private final Duration ttl;
@@ -36,23 +39,29 @@ public class JwtService {
         this.ttl = ttl;
     }
 
-    public IssuedToken generate(AppUserDetails user) {
+    @Override
+    public IssuedToken issue(AuthenticatedUser user) {
         Instant now = Instant.now();
         Instant exp = now.plus(ttl);
+        String jti = UUID.randomUUID().toString();
 
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuer(ISSUER)
-                .subject(String.valueOf(user.getId()))
-                .id(UUID.randomUUID().toString())
+                .subject(String.valueOf(user.id()))
+                .id(jti)
                 .issuedAt(now)
                 .expiresAt(exp)
-                .claim("username", user.getUsername())
-                .claim("roles", user.getAuthorities().stream()
-                        .map(GrantedAuthority::getAuthority).toList())
+                .claim("username", user.username())
+                .claim("roles", List.of("ROLE_" + user.role().name()))
                 .build();
 
         JwsHeader header = JwsHeader.with(MacAlgorithm.HS256).build();
         String token = encoder.encode(JwtEncoderParameters.from(header, claims)).getTokenValue();
+        log.debug("Token issued: userId={} ,jti={}, issuedAt={}",
+                claims.getSubject(),
+                claims.getId(),
+                claims.getIssuedAt()
+        );
         return new IssuedToken(token, exp);
     }
 }

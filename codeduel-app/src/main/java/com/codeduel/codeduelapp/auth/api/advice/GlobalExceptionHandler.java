@@ -1,10 +1,12 @@
-package com.codeduel.codeduelapp.auth.domain.exception;
+package com.codeduel.codeduelapp.auth.api.advice;
 
 import com.codeduel.codeduelapp.auth.api.dto.ApiError;
+import com.codeduel.codeduelapp.auth.domain.exception.*;
 import jakarta.validation.ConstraintViolationException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -16,6 +18,7 @@ import java.time.Instant;
  * Переводит доменные и валидационные исключения в HTTP-ответы
  * формата {@link ApiError}.
  */
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -29,7 +32,7 @@ public class GlobalExceptionHandler {
                 .findFirst()
                 .map(error -> error.getField() + ": " + error.getDefaultMessage())
                 .orElse("Invalid request");
-
+        log.debug("Validation failed: {}", message);
         return buildError(HttpStatus.BAD_REQUEST, message);
     }
 
@@ -37,6 +40,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiError> handleConstraintViolation(
             ConstraintViolationException exception
     ) {
+        log.debug("Constraint violation: {}", exception.getMessage());
         return buildError(HttpStatus.BAD_REQUEST, "Request parameters are invalid");
     }
 
@@ -44,6 +48,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiError> handleUserAlreadyExists(
             UserArleadyExistsException exception
     ) {
+        log.info("Conflict: {}", exception.getMessage());
         return buildError(HttpStatus.CONFLICT, exception.getMessage());
     }
 
@@ -54,6 +59,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiError> handleUserNotFound(
             RuntimeException exception
     ) {
+        log.info("Not found: {}", exception.getClass().getSimpleName());
         return buildError(HttpStatus.NOT_FOUND, exception.getMessage());
     }
 
@@ -64,14 +70,23 @@ public class GlobalExceptionHandler {
         return buildError(HttpStatus.BAD_REQUEST, exception.getMessage());
     }
 
-    @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<ApiError> handleBadCredentials(
-            BadCredentialsException exception
-    ) {
-        return buildError(
-                HttpStatus.UNAUTHORIZED,
-                "Invalid username or password"
-        );
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<ApiError> handleInvalidCredentials(InvalidCredentialsException exception) {
+        log.warn("Login failed: bad credentials");
+        return buildError(HttpStatus.UNAUTHORIZED, exception.getMessage());
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiError> handleAccessDenied(AccessDeniedException e) {
+        log.warn("Access denied");
+        return buildError(HttpStatus.FORBIDDEN, "Access denied");
+    }
+
+    // Страховочная сеть: всё неожиданное
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiError> handleUnexpected(Exception exception) {
+        log.error("Unexpected error", exception);
+        return buildError(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error");
     }
 
     private ResponseEntity<ApiError> buildError(

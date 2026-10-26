@@ -2,6 +2,7 @@ package com.codeduel.codeduelapp.auth.infrastructure.security.config;
 
 import com.codeduel.codeduelapp.auth.domain.service.TokenRevoker;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Component;
  * Подключается в {@code JwtDecoder} после стандартных проверок
  * ({@code exp}, {@code nbf}, {@code iss}).
  */
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class RevokeTokenValidator implements OAuth2TokenValidator<Jwt> {
@@ -22,6 +24,7 @@ public class RevokeTokenValidator implements OAuth2TokenValidator<Jwt> {
     public OAuth2TokenValidatorResult validate(Jwt jwt) {
         if (tokenRevoker.isRevoked(jwt.getId())
                 || tokenRevoker.isIssuedBeforeRevocation(jwt.getSubject(), jwt.getIssuedAt())) {
+            log.debug("Revoked token rejected: userId={}, jti={}",  jwt.getSubject(), jwt.getId());
             return OAuth2TokenValidatorResult.failure(
                     new OAuth2Error("invalid_token", "The token has been revoked", null)
             );

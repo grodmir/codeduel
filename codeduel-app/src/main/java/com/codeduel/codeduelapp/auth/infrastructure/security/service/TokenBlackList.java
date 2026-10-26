@@ -1,6 +1,8 @@
 package com.codeduel.codeduelapp.auth.infrastructure.security.service;
 
 import com.codeduel.codeduelapp.auth.domain.service.TokenRevoker;
+import io.lettuce.core.RedisConnectionException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
@@ -16,6 +18,7 @@ import java.time.Instant;
  * TTL записей — время жизни токена + {@link #LEEWAY} (компенсация рассинхрона
  * часов и секундной точности {@code exp}).
  */
+@Slf4j
 @Component
 public class TokenBlackList implements TokenRevoker {
 
@@ -38,6 +41,9 @@ public class TokenBlackList implements TokenRevoker {
         if (ttl.isPositive()) {
             // "1" тут в качестве заглушки, так как нам важно только значение ключа
             redis.opsForValue().set(JTI_KEY_PREFIX + jti, "1", ttl);
+            log.debug("Token revoked: jti={}, ttl={}s",  jti, ttl);
+        } else {
+            log.debug("Token revoked skipped, already expired: jti={}", jti);
         }
     }
 
@@ -49,18 +55,29 @@ public class TokenBlackList implements TokenRevoker {
                 String.valueOf(Instant.now().getEpochSecond()),
                 tokenTtl.multipliedBy(2).plus(LEEWAY)
         );
+        log.info("All token revoked for user: userId={}", userId);
     }
 
     @Override
     public boolean isRevoked(String jti) {
-        return jti != null && Boolean.TRUE.equals(redis.hasKey(JTI_KEY_PREFIX + jti));
+        try {
+            return jti != null && Boolean.TRUE.equals(redis.hasKey(JTI_KEY_PREFIX + jti));
+        } catch (RedisConnectionException e) {
+            log.error("Redis unavailable while checking token revocation: jti={}", jti, e);
+            throw e; //fail-closed
+        }
     }
 
     @Override
     public boolean isIssuedBeforeRevocation(String userId, Instant issuedAt) {
-        String value = redis.opsForValue().get(USER_KEY_PREFIX + userId);
-        return value != null
-                && issuedAt != null
-                && issuedAt.getEpochSecond() < Long.parseLong(value);
+        try {
+            String value = redis.opsForValue().get(USER_KEY_PREFIX + userId);
+            return value != null
+                    && issuedAt != null
+                    && issuedAt.getEpochSecond() < Long.parseLong(value);
+        } catch (RedisConnectionException e) {
+            log.error("Redis unavailable while checking token revocation for user: userId={}", userId, e);
+            throw e; //fail-closed
+        }
     }
 }

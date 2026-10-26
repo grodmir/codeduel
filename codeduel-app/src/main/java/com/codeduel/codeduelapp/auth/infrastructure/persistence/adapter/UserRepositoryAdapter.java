@@ -7,6 +7,7 @@ import com.codeduel.codeduelapp.auth.infrastructure.persistence.entity.UserJpaEn
 import com.codeduel.codeduelapp.auth.infrastructure.persistence.mapper.UserMapper;
 import com.codeduel.codeduelapp.auth.infrastructure.persistence.repository.UserJpaRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +21,7 @@ import java.util.Optional;
  * профиль загружается eager'ом, иначе {@link UserMapper} упадёт на
  * {@code getProfile()} вне транзакции.
  */
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class UserRepositoryAdapter implements UserRepository {
@@ -33,11 +35,13 @@ public class UserRepositoryAdapter implements UserRepository {
         UserJpaEntity entity;
         if (user.getId() == null) {
             entity = userMapper.toNewEntity(user);
+            log.debug("Creating new user entity with id: {}", entity.getId());
         } else {
             entity = userJpaRepository.findById(user.getId()).orElseThrow(
                     () -> new UserNotFoundById(user.getId())
             );
             userMapper.updateEntity(entity, user);
+            log.debug("Updating user entity with id: {}", entity.getId());
         }
 
         return userMapper.toModel(userJpaRepository.save(entity));
@@ -75,5 +79,6 @@ public class UserRepositoryAdapter implements UserRepository {
                 () -> new UserNotFoundById(id)
         );
         entity.setDeletedAt(OffsetDateTime.now());
+        log.debug("User soft-deleted, userId ={}", entity.getId());
     }
 }

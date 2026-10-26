@@ -3,10 +3,8 @@ package com.codeduel.codeduelapp.auth.api.controller;
 import com.codeduel.codeduelapp.auth.api.dto.ApiError;
 import com.codeduel.codeduelapp.auth.api.dto.LoginRequest;
 import com.codeduel.codeduelapp.auth.api.dto.TokenResponse;
-import com.codeduel.codeduelapp.auth.domain.service.TokenRevoker;
-import com.codeduel.codeduelapp.auth.infrastructure.security.model.AppUserDetails;
-import com.codeduel.codeduelapp.auth.infrastructure.security.dto.IssuedToken;
-import com.codeduel.codeduelapp.auth.infrastructure.security.service.JwtService;
+import com.codeduel.codeduelapp.auth.domain.model.IssuedToken;
+import com.codeduel.codeduelapp.auth.domain.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -17,9 +15,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
@@ -29,9 +24,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @Tag(name = "Authentication", description = "Логин и логаут")
 public class AuthController {
-    private final AuthenticationManager authenticationManager;
-    private final JwtService jwtService;
-    private final TokenRevoker tokenRevoker;
+    private final AuthService authService;
 
     @Operation(summary = "Вход по логину и паролю",
             description = "Возвращает JWT. Дальше его нужно передавать в заголовке Authorization: Bearer <token>.")
@@ -44,16 +37,7 @@ public class AuthController {
     })
     @PostMapping("/login")
     public TokenResponse login(@Valid @RequestBody LoginRequest req) {
-        Authentication authentication = authenticationManager.authenticate(
-                UsernamePasswordAuthenticationToken.unauthenticated(
-                        req.username(),
-                        req.password()
-                )
-        );
-        if (!(authentication.getPrincipal() instanceof AppUserDetails user)) {
-            throw new IllegalStateException("Unexpected user principal: " + authentication.getPrincipal().getClass());
-        }
-        IssuedToken issuedToken = jwtService.generate(user);
+        IssuedToken issuedToken = authService.login(req.username(), req.password());
         return new TokenResponse(issuedToken.value(), issuedToken.expiresAt());
     }
 
@@ -68,6 +52,6 @@ public class AuthController {
     @PostMapping("/logout")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void logout(@AuthenticationPrincipal Jwt jwt) {
-        tokenRevoker.revoke(jwt.getId(), jwt.getExpiresAt());
+        authService.logout(jwt.getId(), jwt.getExpiresAt(), Integer.valueOf(jwt.getSubject()));
     }
 }
