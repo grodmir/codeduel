@@ -26,9 +26,6 @@ public class UserJpaEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.PERSIST)
-    private ProfileJpaEntity profile;
-
     @Column(name = "username",  nullable = false)
     private String username;
 
@@ -48,9 +45,4 @@ public class UserJpaEntity {
 
     @Column(name = "deleted_at")
     private OffsetDateTime deletedAt;
-
-    public void attachProfile(ProfileJpaEntity profile) {
-        this.profile = profile;
-        profile.setUser(this);
-    }
 }

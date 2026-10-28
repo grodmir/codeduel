@@ -1,5 +1,6 @@
 package com.codeduel.codeduelapp.auth.api.dto;
 
+import com.codeduel.codeduelapp.auth.domain.model.Profile;
 import com.codeduel.codeduelapp.auth.domain.model.User;
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -28,14 +29,14 @@ public record UserResponse(
         @Schema(description = "Дата регистрации (UTC)", example = "2026-01-15T10:00:00Z")
         OffsetDateTime createdAt
 ) {
-    public static UserResponse from(User user) {
+    public static UserResponse from(User user, Profile profile) {
         return new UserResponse(
                 user.getId(),
                 user.getUsername(),
                 user.getEmail(),
-                user.getRating(),
-                user.getWins(),
-                user.getLosses(),
+                profile.getRating(),
+                profile.getWins(),
+                profile.getLosses(),
                 user.getCreatedAt()
         );
     }

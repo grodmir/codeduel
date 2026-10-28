@@ -16,10 +16,6 @@ import java.util.Optional;
 
 /**
  * JPA-реализация {@link UserRepository}.
- *
- * <p>Чтения полагаются на {@code @EntityGraph} в {@link UserJpaRepository}:
- * профиль загружается eager'ом, иначе {@link UserMapper} упадёт на
- * {@code getProfile()} вне транзакции.
  */
 @Slf4j
 @Component

@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.*;
 public class RegisterController {
     private final UserService userService;
 
-    @Operation(summary = "Регистрация нового пользователя",
+    @Operation(summary = "Регистрация нового пользователя и связанного с ним профиля",
             description = "Создаёт пользователя с ролью USER и начальным рейтингом. Логин после регистрации отдельный — через /auth/login.")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Пользователь создан"),

@@ -44,9 +44,9 @@ public class GlobalExceptionHandler {
         return buildError(HttpStatus.BAD_REQUEST, "Request parameters are invalid");
     }
 
-    @ExceptionHandler(UserArleadyExistsException.class)
+    @ExceptionHandler(UserAlreadyExistsException.class)
     public ResponseEntity<ApiError> handleUserAlreadyExists(
-            UserArleadyExistsException exception
+            UserAlreadyExistsException exception
     ) {
         log.info("Conflict: {}", exception.getMessage());
         return buildError(HttpStatus.CONFLICT, exception.getMessage());
@@ -54,7 +54,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler({
             UserNotFoundById.class,
-            UserNotFoundByUsername.class
+            UserNotFoundByUsername.class,
+            ProfileNotFoundException.class
     })
     public ResponseEntity<ApiError> handleUserNotFound(
             RuntimeException exception

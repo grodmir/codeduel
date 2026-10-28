@@ -3,7 +3,9 @@ package com.codeduel.codeduelapp.auth.api.controller;
 import com.codeduel.codeduelapp.auth.api.dto.ApiError;
 import com.codeduel.codeduelapp.auth.api.dto.UpdateUserRequest;
 import com.codeduel.codeduelapp.auth.api.dto.UserResponse;
+import com.codeduel.codeduelapp.auth.domain.model.Profile;
 import com.codeduel.codeduelapp.auth.domain.model.User;
+import com.codeduel.codeduelapp.auth.domain.service.ProfileService;
 import com.codeduel.codeduelapp.auth.domain.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -27,6 +29,7 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private final UserService userService;
+    private final ProfileService profileService;
 
     @Operation(summary = "Получить текущего пользователя")
     @ApiResponses({
@@ -39,8 +42,9 @@ public class UserController {
             @AuthenticationPrincipal Jwt jwt
     ) {
         User user = userService.getById(Integer.valueOf(jwt.getSubject()));
+        Profile profile = profileService.getByUserId(user.getId());
 
-        return UserResponse.from(user);
+        return UserResponse.from(user, profile);
     }
 
     @Operation(summary = "Обновить профиль",
@@ -65,7 +69,8 @@ public class UserController {
                 request.newPassword(),
                 request.currentPassword()
         );
-        return UserResponse.from(updatedUser);
+        Profile profile = profileService.getByUserId(updatedUser.getId());
+        return UserResponse.from(updatedUser,  profile);
     }
 
     @Operation(summary = "Удалить аккаунт",

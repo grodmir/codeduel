@@ -16,9 +16,5 @@ public class User {
     private String email;
     private String passwordHash;
     private Role role;
-    private int rating;
-    private int wins;
-    private int losses;
     private OffsetDateTime createdAt;
-
 }

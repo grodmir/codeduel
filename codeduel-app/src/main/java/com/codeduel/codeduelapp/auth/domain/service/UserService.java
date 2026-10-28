@@ -1,11 +1,11 @@
 package com.codeduel.codeduelapp.auth.domain.service;
 
 import com.codeduel.codeduelapp.auth.domain.exception.InvalidCurrentPasswordException;
-import com.codeduel.codeduelapp.auth.domain.exception.UserArleadyExistsException;
+import com.codeduel.codeduelapp.auth.domain.exception.UserAlreadyExistsException;
 import com.codeduel.codeduelapp.auth.domain.exception.UserNotFoundById;
-import com.codeduel.codeduelapp.auth.domain.exception.UserNotFoundByUsername;
 import com.codeduel.codeduelapp.auth.domain.model.Role;
 import com.codeduel.codeduelapp.auth.domain.model.User;
+import com.codeduel.codeduelapp.auth.domain.repository.ProfileRepository;
 import com.codeduel.codeduelapp.auth.domain.repository.UserRepository;
 import com.codeduel.codeduelapp.auth.infrastructure.security.service.PasswordHasher;
 import lombok.RequiredArgsConstructor;
@@ -23,14 +23,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final ProfileService profileService;
     private final PasswordHasher passwordEncoder;
     private final TokenRevoker tokenRevoker;
 
-    @Value("${elo.initial}")
-    private int initialRating;
-
     /**
-     * Создание нового пользователя.
+     * Создание нового пользователя и связанного с ним профиля по {@code useId}
      *
      * <p>{@code username} обрезается по краям, {@code email} - обрезается и приводится
      * к нижнему регистру; уникальность проверяется по нормализованным значениям.
@@ -40,46 +38,35 @@ public class UserService {
      * @param email почта пользователя
      * @param password пароль пользователя. Передаётся в raw-формате, кодируется внутри метода.
      *
-     * @throws UserArleadyExistsException если username или email уже заняты
+     * @throws UserAlreadyExistsException если username или email уже заняты
      * */
     @Transactional
     public void create(String username, String email, String password) {
         String normUsername = username.trim();
         String normEmail = email.trim().toLowerCase();
 
-        if (userRepository.existsByUsername(normUsername)) throw new UserArleadyExistsException("USERNAME");
-        if (userRepository.existsByEmail(normEmail)) throw new UserArleadyExistsException("EMAIL");
+        if (userRepository.existsByUsername(normUsername)) throw new UserAlreadyExistsException("USERNAME");
+        if (userRepository.existsByEmail(normEmail)) throw new UserAlreadyExistsException("EMAIL");
 
         User user = User.builder()
                 .username(normUsername)
                 .email(normEmail)
                 .passwordHash(passwordEncoder.hash(password))
                 .role(Role.USER)
-                .rating(initialRating)
-                .wins(0)
-                .losses(0)
                 .build();
-        userRepository.save(user);
+        User saved = userRepository.save(user);
         log.info("User created: userId={}", user.getId());
+
+        profileService.createFor(saved.getId());
     }
 
     /**
-     * @throws UserNotFoundById если пользователя с таким {@code id} нету
+     * @throws UserNotFoundById если пользователя с таким {@code id} нет
      * */
     @Transactional(readOnly = true)
     public User getById(Integer id) {
         return userRepository.findById(id).orElseThrow(
                 () -> new UserNotFoundById(id)
-        );
-    }
-
-    /**
-     * @throws UserNotFoundByUsername если пользователя с таким {@code username} не существует
-     * */
-    @Transactional(readOnly = true)
-    public User getByUsername(String username) {
-        return userRepository.findByUsername(username).orElseThrow(
-                () -> new UserNotFoundByUsername(username)
         );
     }
 
@@ -90,7 +77,7 @@ public class UserService {
      * от текущего. Смена пароля требует @{code currentPassword} и <b>отзывает
      * все активные токены</b> пользователя.
      *
-     * @throws UserArleadyExistsException если новый email уже занят
+     * @throws UserAlreadyExistsException если новый email уже занят
      * @throws InvalidCurrentPasswordException если {@code newPassword} задан, а {@code currentPassword} не
      *  передан или не совпадает.
      * @throws UserNotFoundById если пользователя с {@code id} не существует.
@@ -103,7 +90,7 @@ public class UserService {
         if (email != null) {
             String normEmail = email.trim().toLowerCase();
             if (!normEmail.equals(user.getEmail())) {
-                if (userRepository.existsByEmail(normEmail)) throw new UserArleadyExistsException("EMAIL");
+                if (userRepository.existsByEmail(normEmail)) throw new UserAlreadyExistsException("EMAIL");
                 builder.email(normEmail);
                 log.info("User email changed: userId={}", id);
             }
