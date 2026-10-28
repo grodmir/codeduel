@@ -27,35 +27,27 @@ public class UserRepositoryAdapter implements UserRepository {
 
     @Override
     @Transactional
-    public User save(User user) {
-        UserJpaEntity entity;
-        if (user.getId() == null) {
-            entity = userMapper.toNewEntity(user);
-            log.debug("Creating new user entity with id: {}", entity.getId());
-        } else {
-            entity = userJpaRepository.findById(user.getId()).orElseThrow(
-                    () -> new UserNotFoundById(user.getId())
-            );
-            userMapper.updateEntity(entity, user);
-            log.debug("Updating user entity with id: {}", entity.getId());
+    public User create(User user) {
+        if (user.getId() != null) {
+            throw new IllegalArgumentException("New user must not have id");
         }
+        UserJpaEntity userJpaEntity = userMapper.toNewEntity(user);
+        return userMapper.toModel(userJpaRepository.save(userJpaEntity));
+    }
 
-        return userMapper.toModel(userJpaRepository.save(entity));
+    @Override
+    @Transactional
+    public User update(User user) {
+        UserJpaEntity userEntity = userJpaRepository.findById(user.getId()).orElseThrow(
+                () -> new UserNotFoundById(user.getId())
+        );
+        userMapper.updateEntity(userEntity, user);
+        return userMapper.toModel(userEntity);
     }
 
     @Override
     public Optional<User> findById(Integer id) {
         return userJpaRepository.findById(id).map(userMapper::toModel);
-    }
-
-    @Override
-    public Optional<User> findByEmail(String email) {
-        return userJpaRepository.findByEmail(email).map(userMapper::toModel);
-    }
-
-    @Override
-    public Optional<User> findByUsername(String username) {
-        return userJpaRepository.findByUsername(username).map(userMapper::toModel);
     }
 
     @Override

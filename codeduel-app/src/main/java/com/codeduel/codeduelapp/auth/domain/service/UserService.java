@@ -5,12 +5,10 @@ import com.codeduel.codeduelapp.auth.domain.exception.UserAlreadyExistsException
 import com.codeduel.codeduelapp.auth.domain.exception.UserNotFoundById;
 import com.codeduel.codeduelapp.auth.domain.model.Role;
 import com.codeduel.codeduelapp.auth.domain.model.User;
-import com.codeduel.codeduelapp.auth.domain.repository.ProfileRepository;
 import com.codeduel.codeduelapp.auth.domain.repository.UserRepository;
 import com.codeduel.codeduelapp.auth.infrastructure.security.service.PasswordHasher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -54,7 +52,7 @@ public class UserService {
                 .passwordHash(passwordEncoder.hash(password))
                 .role(Role.USER)
                 .build();
-        User saved = userRepository.save(user);
+        User saved = userRepository.create(user);
         log.info("User created: userId={}", user.getId());
 
         profileService.createFor(saved.getId());
@@ -106,7 +104,7 @@ public class UserService {
             log.info("User password changed, all tokens revoked: userId={}", id);
         }
 
-        return userRepository.save(builder.build());
+        return userRepository.update(builder.build());
     }
 
     /**

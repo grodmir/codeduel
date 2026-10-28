@@ -9,17 +9,22 @@ import java.util.Optional;
  * */
 public interface UserRepository {
     /**
-     * Сохраняет пользователя: создаёт нового, если {@code id == null},
-     * иначе обновляет существующего
+     * Создаёт и сохраняет нового пользователя
      *
      * @param user доменная модель пользователя
      * @return сохранённая модель с подставленным {@code id} и {@code createdAt}
+     * @throws IllegalArgumentException если {@code user.id != null}
+     * */
+    User create(User user);
+    /**
+     * Обновляет и сохраняет нового пользователя
+     *
+     * @param user доменная модель обновляемого пользователя
+     * @return обновленная модель
      * @throws com.codeduel.codeduelapp.auth.domain.exception.UserNotFoundById при обновлении несуществующего пользователя
      * */
-    User save(User user);
+    User update(User user);
     Optional<User> findById(Integer id);
-    Optional<User> findByEmail(String email);
-    Optional<User> findByUsername(String username);
     boolean existsByEmail(String email);
     boolean existsByUsername(String username);
 
