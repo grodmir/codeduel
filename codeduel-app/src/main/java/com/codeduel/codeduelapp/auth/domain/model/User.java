@@ -5,6 +5,9 @@ import lombok.Getter;
 
 import java.time.OffsetDateTime;
 
+/**
+ * Доменная модель пользователя
+ * */
 @Getter
 @Builder(toBuilder = true)
 public class User {
@@ -13,9 +16,5 @@ public class User {
     private String email;
     private String passwordHash;
     private Role role;
-    private int rating;
-    private int wins;
-    private int losses;
     private OffsetDateTime createdAt;
-
 }

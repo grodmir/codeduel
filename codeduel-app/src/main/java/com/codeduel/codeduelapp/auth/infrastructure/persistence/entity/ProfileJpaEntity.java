@@ -6,6 +6,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 
+/**
+ * Класс сущность, соответствующая таблице {@code profiles} в базе данных.
+ * */
 @Entity
 @Getter
 @Setter

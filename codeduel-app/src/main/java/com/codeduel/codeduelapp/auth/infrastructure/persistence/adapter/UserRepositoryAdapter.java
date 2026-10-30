@@ -7,12 +7,17 @@ import com.codeduel.codeduelapp.auth.infrastructure.persistence.entity.UserJpaEn
 import com.codeduel.codeduelapp.auth.infrastructure.persistence.mapper.UserMapper;
 import com.codeduel.codeduelapp.auth.infrastructure.persistence.repository.UserJpaRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
 import java.util.Optional;
 
+/**
+ * JPA-реализация {@link UserRepository}.
+ */
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class UserRepositoryAdapter implements UserRepository {
@@ -22,33 +27,27 @@ public class UserRepositoryAdapter implements UserRepository {
 
     @Override
     @Transactional
-    public User save(User user) {
-        UserJpaEntity entity;
-        if (user.getId() == null) {
-            entity = userMapper.toNewEntity(user);
-        } else {
-            entity = userJpaRepository.findById(user.getId()).orElseThrow(
-                    () -> new UserNotFoundById(user.getId())
-            );
-            userMapper.updateEntity(entity, user);
+    public User create(User user) {
+        if (user.getId() != null) {
+            throw new IllegalArgumentException("New user must not have id");
         }
+        UserJpaEntity userJpaEntity = userMapper.toNewEntity(user);
+        return userMapper.toModel(userJpaRepository.save(userJpaEntity));
+    }
 
-        return userMapper.toModel(userJpaRepository.save(entity));
+    @Override
+    @Transactional
+    public User update(User user) {
+        UserJpaEntity userEntity = userJpaRepository.findById(user.getId()).orElseThrow(
+                () -> new UserNotFoundById(user.getId())
+        );
+        userMapper.updateEntity(userEntity, user);
+        return userMapper.toModel(userEntity);
     }
 
     @Override
     public Optional<User> findById(Integer id) {
         return userJpaRepository.findById(id).map(userMapper::toModel);
-    }
-
-    @Override
-    public Optional<User> findByEmail(String email) {
-        return userJpaRepository.findByEmail(email).map(userMapper::toModel);
-    }
-
-    @Override
-    public Optional<User> findByUsername(String username) {
-        return userJpaRepository.findByUsername(username).map(userMapper::toModel);
     }
 
     @Override
@@ -68,5 +67,6 @@ public class UserRepositoryAdapter implements UserRepository {
                 () -> new UserNotFoundById(id)
         );
         entity.setDeletedAt(OffsetDateTime.now());
+        log.debug("User soft-deleted, userId ={}", entity.getId());
     }
 }
