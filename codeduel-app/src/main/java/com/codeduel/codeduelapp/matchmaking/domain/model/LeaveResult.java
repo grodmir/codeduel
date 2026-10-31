@@ -1,5 +1,10 @@
 package com.codeduel.codeduelapp.matchmaking.domain.model;
 
 public enum LeaveResult {
-    REMOVED, NOT_IN_QUEUE, ALREADY_MATCHED
+    /** Игрок был в очереди и удалён */
+    REMOVED,
+    /** Игрока в очереди не было */
+    NOT_IN_QUEUE,
+    /** Планировщик уже изъял игрока, пара формируется. Клиент ждёт MATCH_FOUND */
+    ALREADY_MATCHED
 }
