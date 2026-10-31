@@ -4,28 +4,31 @@ import com.codeduel.codeduelapp.matchmaking.domain.model.QueueEntry;
 import com.codeduel.codeduelapp.matchmaking.domain.repository.QueueStore;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Component
-public class RedisQueue implements QueueStore {
+public class InMemoryQueueStore implements QueueStore {
+
+    Map<Integer, QueueEntry> entries = new LinkedHashMap<>();
+
     @Override
     public boolean add(QueueEntry entry) {
-        return false;
+        Objects.requireNonNull(entry, "entry");
+        return entries.putIfAbsent(entry.userId(), entry) == null;
     }
 
     @Override
     public boolean remove(int userId) {
-        return false;
+        return entries.remove(userId) != null;
     }
 
     @Override
     public Optional<QueueEntry> find(int userId) {
-        return Optional.empty();
+        return Optional.ofNullable(entries.get(userId));
     }
 
     @Override
     public List<QueueEntry> snapshot() {
-        return List.of();
+        return List.copyOf(entries.values());
     }
 }
