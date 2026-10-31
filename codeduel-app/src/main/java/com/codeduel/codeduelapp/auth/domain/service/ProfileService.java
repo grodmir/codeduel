@@ -20,7 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class ProfileService {
     private final ProfileRepository profileRepository;
 
-    @Value("${elo.initial}")
+    @Value("${app.elo.initial}")
     private int initialRating;
 
     protected void createFor(Integer userId) {
