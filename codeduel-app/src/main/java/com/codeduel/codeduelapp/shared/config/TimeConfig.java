@@ -1,0 +1,18 @@
+package com.codeduel.codeduelapp.shared.config;
+
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import java.time.Clock;
+
+/** Общий источник времени. В тестах подменяется фиксированными или управляемыми часами. */
+@Configuration
+public class TimeConfig {
+
+    @Bean
+    @ConditionalOnMissingBean
+    public Clock clock() {
+        return Clock.systemUTC();
+    }
+}

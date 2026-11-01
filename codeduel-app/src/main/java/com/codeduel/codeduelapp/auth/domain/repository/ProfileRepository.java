@@ -20,4 +20,5 @@ public interface ProfileRepository {
     Profile update(Profile profile);
 
     Optional<Profile> findByUserId(Integer id);
+    int getRatingByUserId(Integer userId);
 }

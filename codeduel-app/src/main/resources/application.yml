@@ -43,4 +43,3 @@ app:
     window-step-per-second: 10
     max-window: 200
     tick-interval: 1s
-    listener-timeout: 5s
