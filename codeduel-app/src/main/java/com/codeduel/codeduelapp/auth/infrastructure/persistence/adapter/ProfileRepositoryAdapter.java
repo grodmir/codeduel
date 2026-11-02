@@ -47,4 +47,11 @@ public class ProfileRepositoryAdapter implements ProfileRepository {
     public Optional<Profile> findByUserId(Integer userId) {
         return profileRepository.findById(userId).map(profileMapper::toModel);
     }
+
+    @Override
+    public int getRatingByUserId(Integer userId) {
+        return profileRepository.findById(userId)
+                .orElseThrow(() -> new ProfileNotFoundException(userId))
+                .getRating();
+    }
 }

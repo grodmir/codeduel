@@ -5,6 +5,7 @@ import com.codeduel.codeduelapp.auth.domain.exception.InvalidProfileDataExceptio
 import com.codeduel.codeduelapp.auth.domain.exception.ProfileNotFoundException;
 import com.codeduel.codeduelapp.auth.domain.model.Profile;
 import com.codeduel.codeduelapp.auth.domain.repository.ProfileRepository;
+import com.codeduel.codeduelapp.matchmaking.domain.port.PlayerRatingProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,10 +18,10 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class ProfileService {
+public class ProfileService implements PlayerRatingProvider {
     private final ProfileRepository profileRepository;
 
-    @Value("${elo.initial}")
+    @Value("${app.elo.initial}")
     private int initialRating;
 
     protected void createFor(Integer userId) {
@@ -59,5 +60,10 @@ public class ProfileService {
                 .wins(update.wins())
                 .losses(update.losses())
                 .build());
+    }
+
+    @Transactional(readOnly = true)
+    public int getRatingByUserId(Integer userId) {
+        return profileRepository.getRatingByUserId(userId);
     }
 }
